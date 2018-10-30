@@ -2,7 +2,7 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as logger from 'morgan';
 import * as path from 'path';
-import { IndexRoute } from './routes/index';
+import { userRoute } from './routes/user';
 import { connect } from 'mongoose';
 
 /**
@@ -59,7 +59,7 @@ export class Server {
   }
 
   /**
-   * Configure application
+   * Configure applicationIndexRoute
    *
    * @class Server
    */
@@ -117,7 +117,7 @@ export class Server {
    */
   private routes() {
     // use router middleware
-    this.app.use('/', IndexRoute);
+    this.app.use('/user', userRoute);
 
   }
 
