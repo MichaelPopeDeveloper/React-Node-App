@@ -1,2 +1,3 @@
-const app = require("./dir/server");
+const app = require('./src/dir/server');
+
 app.Server.bootstrap();
