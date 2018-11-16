@@ -38,6 +38,7 @@ var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 // import * as jwt from 'jsonwebtoken';
+var crypto = require("crypto");
 var User_1 = require("../models/User");
 var encryptor = require("../helper/Encryptor");
 var tokenHelper = require("../helper/JWT");
@@ -47,6 +48,18 @@ exports.userRoute = router
     res.send('User Home Page');
 })
     .get('/profile', function (req, res) {
+    var name = req.body.name /*email, notes*/;
+    User_1.user.findOne({ name: name })
+        .then(function (user) {
+        if (!user) {
+            res.send('There is no user with those credentials').status(501);
+        }
+        else {
+            var name_1 = user.name, email = user.email, notes = user.notes;
+            var token = tokenHelper.signToken({ name: name_1, email: email, notes: notes });
+            res.send(token);
+        }
+    });
     // User profile that shoes notes
     res.send({ msg: 'profile' });
 })
@@ -65,8 +78,8 @@ exports.userRoute = router
             res.send('A user with that email already exists....');
         }
         else {
-            var name_1 = result.name, email_1 = result.email, notes = result.notes;
-            var token = tokenHelper.signToken({ name: name_1, email: email_1, notes: notes });
+            var name_2 = result.name, email_1 = result.email, notes = result.notes;
+            var token = tokenHelper.signToken({ name: name_2, email: email_1, notes: notes });
             res.send(token);
         }
         console.log(result);
@@ -75,11 +88,12 @@ exports.userRoute = router
         .catch(function (error) { return console.log(error); });
 })
     .post('/login', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-    var _a, name, email, password, dbUser, notes, token;
+    var _a, email, password, dbUser, notes, token;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                _a = req.body, name = _a.name, email = _a.email, password = _a.password;
+                _a = req.body, email = _a.email, password = _a.password;
+                console.log({ email: email, password: password });
                 return [4 /*yield*/, User_1.user.findOne({ email: email }).catch(function (err) { return res.send(err); })];
             case 1:
                 dbUser = _b.sent();
@@ -88,11 +102,11 @@ exports.userRoute = router
                 }
                 notes = dbUser.notes;
                 if (encryptor.comparePassword(password, dbUser.password)) {
-                    token = tokenHelper.signToken({ name: name, email: email, notes: notes });
-                    res.send({ token: token });
+                    token = tokenHelper.signToken({ email: email, notes: notes });
+                    res.send({ token: token, authenticated: true });
                 }
                 else {
-                    res.sendStatus(403);
+                    res.send({ msg: 'invalid credentials', authenticated: false }).status(403);
                 }
                 return [2 /*return*/];
         }
@@ -116,7 +130,36 @@ exports.userRoute = router
                     res.send('No user with that email exists...').status(403);
                 }
                 else {
-                    User_1.user.findOneAndUpdate({ email: email }, { $push: { notes: note } }) // validate that update happened
+                    // Give note an id for retrieval
+                    note.id = crypto.randomBytes(64).toString('hex');
+                    User_1.user.findOneAndUpdate({ email: email }, { $push: { notes: note } })
+                        .then(function (result) { return res.send(result); })
+                        .catch(function (err) { return res.send(err); });
+                }
+                _a.label = 3;
+            case 3: return [2 /*return*/];
+        }
+    });
+}); })
+    .delete('/deleteNote', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+    var token, decodedToken, email, note, dbUser;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                token = req.body.token;
+                decodedToken = tokenHelper.decodeToken(token);
+                email = decodedToken.email, note = decodedToken.note;
+                if (!(decodedToken.exp < Date.now() / 1000)) return [3 /*break*/, 1];
+                res.send('Token is expired').status(403);
+                return [3 /*break*/, 3];
+            case 1: return [4 /*yield*/, User_1.user.findOne({ email: email }).catch(function (err) { return res.send(err); })];
+            case 2:
+                dbUser = _a.sent();
+                if (!dbUser) {
+                    res.send('No user with that email exists...').status(403);
+                }
+                else {
+                    User_1.user.findOneAndUpdate({ email: email }, { $push: { notes: note } })
                         .then(function (result) { return res.send(result); })
                         .catch(function (err) { return res.send(err); });
                 }

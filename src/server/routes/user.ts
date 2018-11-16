@@ -11,17 +11,17 @@ export const userRoute = router
     res.send('User Home Page');
   })
   .get('/profile', (req, res) => { // Should route be called notes?
-    const { name, email, notes } = req.body;
+    const { name /*email, notes*/ } = req.body;
     user.findOne({ name })
-    .then((user) => {
-      if (!user) {
-        res.send('There is no user with those credentials').status(501);
-      } else {
-        const { name, email, notes }: any = user;
-        const token = tokenHelper.signToken({ name, email, notes });
-        res.send(token);
-      }
-    });
+      .then((user) => {
+        if (!user) {
+          res.send('There is no user with those credentials').status(501);
+        } else {
+          const { name, email, notes }: any = user;
+          const token = tokenHelper.signToken({ name, email, notes });
+          res.send(token);
+        }
+      });
     // User profile that shoes notes
     res.send({ msg: 'profile' });
   })
@@ -49,17 +49,18 @@ export const userRoute = router
       .catch(error => console.log(error));
   })
   .post('/login', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { email, password } = req.body;
+    console.log({ email, password });
     const dbUser: any = await user.findOne({ email }).catch(err => res.send(err));
     if (!dbUser) {
       res.send('No user with that username exists...').status(403);
     }
     const { notes } = dbUser;
     if (encryptor.comparePassword(password, dbUser.password)) {
-      const token = tokenHelper.signToken({ name, email, notes });
-      res.send({ token });
+      const token = tokenHelper.signToken({ email, notes });
+      res.send({ token, authenticated: true });
     } else {
-      res.sendStatus(403);
+      res.send({ msg: 'invalid credentials', authenticated: false }).status(403);
     }
   })
   .post('/createNote', async (req, res) => {

@@ -20,7 +20,7 @@ var Server = /** @class */ (function () {
      * @constructor
      */
     function Server() {
-        this.port = 3001;
+        this.port = process.env.PORT || 3001;
         // create expressjs application.
         this.app = express();
         // configure application.

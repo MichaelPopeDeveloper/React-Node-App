@@ -3,6 +3,11 @@
   min-height: 100vh;
 }
 
+.login-background {
+  /* background-image: url("https://images.pexels.com/photos/317356/pexels-photo-317356.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260");
+  background-repeat: no-repeat;
+  background-size: cover; */
+}
 .App {
   text-align: center;
 }

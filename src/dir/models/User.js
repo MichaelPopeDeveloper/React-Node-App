@@ -16,6 +16,11 @@ var userSchema = new mongoose.Schema({
         required: true,
     },
     notes: [{
+            id: {
+                type: String,
+                required: false,
+                unique: true,
+            },
             title: {
                 type: String,
                 required: false,

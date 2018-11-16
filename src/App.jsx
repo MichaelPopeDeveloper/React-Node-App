@@ -1,7 +1,14 @@
 import React, { Component } from 'react';
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Redirect,
+  withRouter
+} from 'react-router-dom';
 import Login from './components/Login';
 import './App.css';
-import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 class App extends Component {
   constructor(props) {
@@ -17,11 +24,13 @@ class App extends Component {
   render() {
     const { state } = this;
     return (
-      <div className="container-fluid">
-        <Login />
-      </div>
-        );
-      }
-    }
-    
-    export default App;
+      <Router>
+        <div className="container-fluid">
+          <Route path="/" component={Login} />
+        </div>
+      </Router>
+    );
+  }
+}
+
+export default App;
