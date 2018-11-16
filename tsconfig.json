@@ -19,7 +19,7 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "./src/server/**/*"
+    "./src/server/**/*", "src/components/Login.jsx"
   ],
   "exclude": [
     ".git",

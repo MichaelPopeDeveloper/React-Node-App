@@ -1,5 +1,6 @@
 import * as express from 'express';
 // import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
 import { user } from '../models/User';
 import * as encryptor from '../helper/Encryptor';
 import * as tokenHelper from '../helper/JWT';
@@ -10,6 +11,17 @@ export const userRoute = router
     res.send('User Home Page');
   })
   .get('/profile', (req, res) => { // Should route be called notes?
+    const { name, email, notes } = req.body;
+    user.findOne({ name })
+    .then((user) => {
+      if (!user) {
+        res.send('There is no user with those credentials').status(501);
+      } else {
+        const { name, email, notes }: any = user;
+        const token = tokenHelper.signToken({ name, email, notes });
+        res.send(token);
+      }
+    });
     // User profile that shoes notes
     res.send({ msg: 'profile' });
   })
@@ -61,7 +73,27 @@ export const userRoute = router
       if (!dbUser) {
         res.send('No user with that email exists...').status(403);
       } else {
-        user.findOneAndUpdate({ email }, { $push: { notes: note } }) // validate that update happened
+        // Give note an id for retrieval
+        note.id = crypto.randomBytes(64).toString('hex');
+        user.findOneAndUpdate({ email }, { $push: { notes: note } })
+          .then(result => res.send(result))
+          .catch(err => res.send(err));
+      }
+      // const { notes } = dbUser;
+    }
+  })
+  .delete('/deleteNote', async (req, res) => {
+    const { token } = req.body;
+    const decodedToken: any = tokenHelper.decodeToken(token);
+    const { email, note } = decodedToken;
+    if (decodedToken.exp < Date.now() / 1000) {
+      res.send('Token is expired').status(403);
+    } else {
+      const dbUser: any = await user.findOne({ email }).catch(err => res.send(err));
+      if (!dbUser) {
+        res.send('No user with that email exists...').status(403);
+      } else {
+        user.findOneAndUpdate({ email }, { $push: { notes: note } })
           .then(result => res.send(result))
           .catch(err => res.send(err));
       }
