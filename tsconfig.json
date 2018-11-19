@@ -19,7 +19,7 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "./src/server/**/*", 
+    "./src/server/**/*", "src/components/Protected.jsx", "src/components/Auth.jsx", 
   ],
   "exclude": [
     ".git",

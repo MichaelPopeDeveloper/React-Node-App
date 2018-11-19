@@ -7,7 +7,12 @@ exports.signToken = function (data) {
     return token;
 };
 exports.decodeToken = function (token) {
-    var decodedToken = jwt.verify(token, secret);
+    var decodedToken = jwt.verify(token, secret, function (err, decodedToken) {
+        if (err) {
+            return { isValid: false, msg: 'token has expired', exp: 0 };
+        }
+        return decodedToken;
+    });
     return decodedToken;
 };
 //# sourceMappingURL=JWT.js.map

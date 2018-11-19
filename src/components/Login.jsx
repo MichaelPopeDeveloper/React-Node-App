@@ -18,6 +18,7 @@ class Login extends Component {
     this.state = {
       email: '',
       password: '',
+      authenticated: false,
     };
     this.login = this.login.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -43,6 +44,24 @@ class Login extends Component {
     //   .catch(err => console.log(err));
     // this.login();
   }
+
+  // checkToken() {
+  //   const localToken = localStorage.getItem('token');
+  //   const isAuthenticated = axios.post('/user/checkToken', {
+  //     token: localToken,
+  //   })
+  //     .then((res) => {
+  //       const { authenticated } = res.data;
+  //       console.log(authenticated);
+  //       this.setState({ isAuth: authenticated });
+  //       return authenticated;
+  //     })
+  //     .catch(err => {
+  //       console.log(err);
+  //       return false;
+  //     });
+  //   return isAuthenticated;
+  // }
 
   login(credentials) {
     axios.post('/user/login', {
@@ -98,7 +117,7 @@ class Login extends Component {
               <div className="form-group">
                 <small id="emailHelp" className="form-text text-muted">Not a member? SignUp</small>
               </div>
-              <button type="submit" className="btn btn-primary">Submit</button>
+              <Link to="/test"><button type="submit" className="btn btn-primary">Submit</button></Link>
             </form>
           </div>
         </div>

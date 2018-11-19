@@ -47,21 +47,30 @@ exports.userRoute = router
     .get('/', function (req, res) {
     res.send('User Home Page');
 })
-    .get('/profile', function (req, res) {
-    var name = req.body.name /*email, notes*/;
-    User_1.user.findOne({ name: name })
-        .then(function (user) {
-        if (!user) {
-            res.send('There is no user with those credentials').status(501);
-        }
-        else {
-            var name_1 = user.name, email = user.email, notes = user.notes;
-            var token = tokenHelper.signToken({ name: name_1, email: email, notes: notes });
-            res.send(token);
-        }
-    });
-    // User profile that shoes notes
-    res.send({ msg: 'profile' });
+    .post('/notes', function (req, res) {
+    var token = req.body.token;
+    console.log("token: " + token);
+    var decodedToken = tokenHelper.decodeToken(token);
+    if (decodedToken.exp > Date.now() / 1000) {
+        console.log('not expired');
+        console.log(decodedToken);
+        var email = decodedToken.email;
+        User_1.user.findOne({ email: email })
+            .then(function (user) {
+            if (!user) {
+                res.send('There is no user with those credentials').status(501);
+            }
+            else {
+                var name_1 = user.name, email_1 = user.email, notes = user.notes;
+                var token_1 = tokenHelper.signToken({ name: name_1, email: email_1, notes: notes });
+                res.send({ token: token_1 });
+            }
+        });
+    }
+    else {
+        console.log('expired token');
+        res.send('nothing buddy');
+    }
 })
     .post('/signUp', function (req, res) {
     var _a = req.body, name = _a.name, email = _a.email, password = _a.password;
@@ -78,8 +87,8 @@ exports.userRoute = router
             res.send('A user with that email already exists....');
         }
         else {
-            var name_2 = result.name, email_1 = result.email, notes = result.notes;
-            var token = tokenHelper.signToken({ name: name_2, email: email_1, notes: notes });
+            var name_2 = result.name, email_2 = result.email, notes = result.notes;
+            var token = tokenHelper.signToken({ name: name_2, email: email_2, notes: notes });
             res.send(token);
         }
         console.log(result);
@@ -139,6 +148,20 @@ exports.userRoute = router
                 _a.label = 3;
             case 3: return [2 /*return*/];
         }
+    });
+}); })
+    .post('/checkToken', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+    var token, decodedToken;
+    return __generator(this, function (_a) {
+        token = req.body.token;
+        decodedToken = tokenHelper.decodeToken(token);
+        if (decodedToken.exp < Date.now() / 1000) {
+            res.send({ msg: 'Token is expired', authenticated: false });
+        }
+        else {
+            res.send({ msg: 'token is not expired', authenticated: true });
+        }
+        return [2 /*return*/];
     });
 }); })
     .delete('/deleteNote', function (req, res) { return __awaiter(_this, void 0, void 0, function () {

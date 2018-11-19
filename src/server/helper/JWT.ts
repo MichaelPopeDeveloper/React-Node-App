@@ -6,7 +6,12 @@ export const signToken = (data: object) => {
   return token;
 };
 
-export const decodeToken = (token: any) => {
-  const decodedToken = jwt.verify(token, secret);
+export const decodeToken = (token: any): any => {
+  const decodedToken = jwt.verify(token, secret, (err, decodedToken) => {
+    if (err) {
+      return { isValid: false, msg: 'token has expired', exp: 0 };
+    }
+    return decodedToken;
+  });
   return decodedToken;
 };

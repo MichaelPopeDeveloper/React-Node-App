@@ -10,20 +10,28 @@ export const userRoute = router
   .get('/', (req, res) => {
     res.send('User Home Page');
   })
-  .get('/profile', (req, res) => { // Should route be called notes?
-    const { name /*email, notes*/ } = req.body;
-    user.findOne({ name })
-      .then((user) => {
-        if (!user) {
-          res.send('There is no user with those credentials').status(501);
-        } else {
-          const { name, email, notes }: any = user;
-          const token = tokenHelper.signToken({ name, email, notes });
-          res.send(token);
-        }
-      });
-    // User profile that shoes notes
-    res.send({ msg: 'profile' });
+  .post('/notes', (req, res) => {
+    const { token } = req.body;
+    console.log(`token: ${token}`);
+    const decodedToken = tokenHelper.decodeToken(token);
+    if (decodedToken.exp > Date.now() / 1000) {
+      console.log('not expired');
+      console.log(decodedToken);
+      const { email } = decodedToken;
+      user.findOne({ email })
+        .then((user) => {
+          if (!user) {
+            res.send('There is no user with those credentials').status(501);
+          } else {
+            const { name, email, notes }: any = user;
+            const token = tokenHelper.signToken({ name, email, notes });
+            res.send({ token });
+          }
+        });
+    } else {
+      console.log('expired token');
+      res.send('nothing buddy');
+    }
   })
   .post('/signUp', (req, res) => {
     const { name, email, password } = req.body;
@@ -66,7 +74,7 @@ export const userRoute = router
   .post('/createNote', async (req, res) => {
     const { token } = req.body;
     const decodedToken: any = tokenHelper.decodeToken(token);
-    const { email, note } = decodedToken;
+    const { email, title, note } = decodedToken;
     if (decodedToken.exp < Date.now() / 1000) {
       res.send('Token is expired').status(403);
     } else {
@@ -81,6 +89,15 @@ export const userRoute = router
           .catch(err => res.send(err));
       }
       // const { notes } = dbUser;
+    }
+  })
+  .post('/checkToken', async (req, res) => {
+    const { token } = req.body;
+    const decodedToken: any = tokenHelper.decodeToken(token);
+    if (decodedToken.exp < Date.now() / 1000) {
+      res.send({ msg: 'Token is expired', authenticated: false });
+    } else {
+      res.send({ msg: 'token is not expired', authenticated: true });
     }
   })
   .delete('/deleteNote', async (req, res) => {
