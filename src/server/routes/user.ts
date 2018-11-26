@@ -1,6 +1,6 @@
 import * as express from 'express';
 // import * as jwt from 'jsonwebtoken';
-import * as crypto from 'crypto';
+// import * as crypto from 'crypto';
 import { user } from '../models/User';
 import * as encryptor from '../helper/Encryptor';
 import * as tokenHelper from '../helper/JWT';
@@ -74,7 +74,10 @@ export const userRoute = router
   .post('/createNote', async (req, res) => {
     const { token } = req.body;
     const decodedToken: any = tokenHelper.decodeToken(token);
+    console.log({ decodedToken });
     const { email, title, note } = decodedToken;
+    // Assign title to note
+    note.title = title;
     if (decodedToken.exp < Date.now() / 1000) {
       res.send('Token is expired').status(403);
     } else {
@@ -83,10 +86,13 @@ export const userRoute = router
         res.send('No user with that email exists...').status(403);
       } else {
         // Give note an id for retrieval
-        note.id = crypto.randomBytes(64).toString('hex');
+        // note.id = crypto.randomBytes(64).toString('hex');
+        /**
+         * Retrieve notes from db user and send them to client in token.
+         */
         user.findOneAndUpdate({ email }, { $push: { notes: note } })
-          .then(result => res.send(result))
-          .catch(err => res.send(err));
+          .then(result => res.send({ result, noteSaved: true }))
+          .catch(err => res.send({ err, noteSaved: false }));
       }
       // const { notes } = dbUser;
     }

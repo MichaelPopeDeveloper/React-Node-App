@@ -12,12 +12,6 @@ import * as axios from 'axios';
 import * as localStorage from '../dir/helper/localStorage';
 import * as tokenHelper from '../dir/helper/JWT';
 
-////////////////////////////////////////////////////////////
-// 1. Click the public page
-// 2. Click the protected page
-// 3. Log in
-// 4. Click the back button, note the URL each time
-
 function AuthExample() {
   return (
     <Router>

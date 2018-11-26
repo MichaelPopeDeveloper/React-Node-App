@@ -1,9 +1,24 @@
 import React, { Component } from 'react';
+import { withRouter } from "react-router-dom";
 import * as axios from 'axios';
 import * as localStorage from '../dir/helper/localStorage';
 import * as tokenHelper from '../dir/helper/JWT';
 import logo from '../logo.svg';
 import '../App.css';
+
+const Button = withRouter(({ history, ...props }) => (
+  <button
+    className={props.className}
+    {...props}
+    type="button"
+    onClick={() => {
+      history.push('/protected');
+      props.buttonFunc();
+    }}
+  >
+    Save
+  </button>
+));
 
 class Notes extends Component {
   constructor(props) {
@@ -16,6 +31,7 @@ class Notes extends Component {
     this.login = this.login.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handleNoteChange = this.handleNoteChange.bind(this);
+    this.handleNoteSave = this.handleNoteSave.bind(this);
   }
 
   componentWillMount() {
@@ -34,7 +50,8 @@ class Notes extends Component {
     // })
     //   .then(res => console.log(res))
     //   .catch(err => console.log(err));
-    this.login();
+    console.log(this.props.location.state);
+    // this.login();
   }
 
   login() {
@@ -55,18 +72,20 @@ class Notes extends Component {
       .catch(err => console.log(err));
   }
 
-  handleNoteSave(event) {
-    event.preventDefault();
-    const { email } = tokenHelper.decodedToken(localStorage.getItem('token'));
+  handleNoteSave() {
+    // event.preventDefault();
+    const { email } = tokenHelper.decodeToken(localStorage.getItem('token'));
     const { title, note } = this.state;
-    const newToken = tokenHelper.signToken({ email, title, note });
+    console.log({ title });
+    console.log({ note });
+    const newToken = tokenHelper.signToken({ email, title, note: { note, title: '' } });
     axios.post('/user/createNote', {
       token: newToken,
     })
       .then((res) => {
-        const { authenticated } = res.data;
-        console.log(authenticated);
-        if (authenticated) {
+        const { noteSaved } = res.data;
+        console.log(res.data);
+        if (noteSaved) {
           this.isAuthenticated = true;
           // cb(this.isAuthenticated);
         } else {
@@ -89,8 +108,6 @@ class Notes extends Component {
     this.setState({ note: event.target.value });
   }
 
-
-
   render() {
     const { state } = this;
     return (
@@ -99,16 +116,25 @@ class Notes extends Component {
           {/* <h1 className="text-center text-body font-weight-bold display-1">INOTE</h1>
           <h2 className="text-secondary text-center"> Your one stop shop for taking notes</h2> */}
           <form className="w-100 mt-5  p-5 rounded bg-white">
-            <h1 className="text-center">Create Note</h1>
+            {/* <h1 className="text-center">Create Note</h1> */}
             <div className="form-group">
               <label>Title</label>
-              <input onChange={this.handleTitleChange} type="text" className="form-control" id="NoteTitle" aria-describedby="emailHelp" placeholder="Title" />
+              <input onChange={this.handleTitleChange} type="text" className="form-control" style={
+                {
+                  border: '0px solid #ced4da',
+                }
+              } id="NoteTitle" aria-describedby="emailHelp" placeholder="Enter title here..." />
             </div>
             <div class="form-group">
               <label for="exampleFormControlTextarea1">Note</label>
-              <textarea onChange={this.handleNote} class="form-control h-75" id="exampleFormControlTextarea1" placeholder="Note..." rows="18"></textarea>
+              <textarea onChange={this.handleNoteChange} class="form-control h-75" id="exampleFormControlTextarea1" style={
+                {
+                  border: '0px solid #ced4da',
+                }
+              } placeholder="Enter note here..." rows="18"></textarea>
             </div>
-            <button type="submit" className="btn btn-primary">Save</button>
+            <Button className="btn btn-primary" buttonFunc={this.handleNoteSave} />
+            {/* <button type="submit" className="btn btn-primary">Save</button> */}
           </form>
         </div>
       </div>

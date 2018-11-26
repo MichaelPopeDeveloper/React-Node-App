@@ -12,9 +12,6 @@ import * as localStorage from '../dir/helper/localStorage';
 import * as tokenHelper from '../dir/helper/JWT';
 import '../App.css';
 
-
-
-
 class Admin extends Component {
   constructor(props) {
     super(props);
@@ -25,6 +22,7 @@ class Admin extends Component {
     // this.login = this.login.bind(this);
     this.getNotes = this.getNotes.bind(this);
     this.redirectToNotes = this.redirectToNotes.bind(this);
+    this.logNoteValue = this.logNoteValue.bind(this);
   }
 
   componentWillMount() {
@@ -61,6 +59,7 @@ class Admin extends Component {
         if (token) {
           const decodedToken = tokenHelper.decodeToken(token);
           const { name, notes } = decodedToken;
+          console.log({ notes });
           this.setState({ name, notes });
         } else {
           console.log(false);
@@ -70,25 +69,34 @@ class Admin extends Component {
       .catch(err => console.log(err));
   }
 
+  logNoteValue(event) {
+    console.log(event.target.getAttribute('data-key'));
+  }
+
   redirectToNotes() {
     console.log('redirecting!!');
-    return <Redirect to={"/notes"} />;
+    return <Redirect
+    to={{
+       pathname: "/notes",
+       state: {
+        egg: 'egg'
+       }
+    }}
+  />;
 
   }
 
 
   render() {
+    const listNotes = this.state.notes.map((note) => {
+      return <li data-key={note._id} onClick={this.logNoteValue} className="border-top border-bottom p-3">{note.title}</li>;
+    });
     const { state } = this;
     return (
       <div className="row vh-100">
         <div className="col w-100 d-flex flex-column justify-content-start align-items-center align-content-center">
-          <button className="btn btn-primary m-5" type="text" onClick={this.redirectToNotes}>Add Note</button>
-          <Link to="notes">Notes</Link>
-          <ul className="list-unstyled w-100">
-            <li className="border-top border-bottom p-3">List item 1</li>
-            <li className="border-top border-bottom p-3">List item 1</li>
-            <li className="border-top border-bottom p-3">List item 1</li>
-          </ul>
+          <Link to="/notes"><button className="btn btn-primary m-5" type="text" onClick={this.redirectToNotes}>Add Note</button></Link>
+          <ul className="list-unstyled w-100">{listNotes}</ul>
         </div>
       </div>
     );

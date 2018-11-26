@@ -38,7 +38,7 @@ var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 // import * as jwt from 'jsonwebtoken';
-var crypto = require("crypto");
+// import * as crypto from 'crypto';
 var User_1 = require("../models/User");
 var encryptor = require("../helper/Encryptor");
 var tokenHelper = require("../helper/JWT");
@@ -122,13 +122,16 @@ exports.userRoute = router
     });
 }); })
     .post('/createNote', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-    var token, decodedToken, email, note, dbUser;
+    var token, decodedToken, email, title, note, dbUser;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 token = req.body.token;
                 decodedToken = tokenHelper.decodeToken(token);
-                email = decodedToken.email, note = decodedToken.note;
+                console.log({ decodedToken: decodedToken });
+                email = decodedToken.email, title = decodedToken.title, note = decodedToken.note;
+                // Assign title to note
+                note.title = title;
                 if (!(decodedToken.exp < Date.now() / 1000)) return [3 /*break*/, 1];
                 res.send('Token is expired').status(403);
                 return [3 /*break*/, 3];
@@ -140,10 +143,10 @@ exports.userRoute = router
                 }
                 else {
                     // Give note an id for retrieval
-                    note.id = crypto.randomBytes(64).toString('hex');
+                    // note.id = crypto.randomBytes(64).toString('hex');
                     User_1.user.findOneAndUpdate({ email: email }, { $push: { notes: note } })
-                        .then(function (result) { return res.send(result); })
-                        .catch(function (err) { return res.send(err); });
+                        .then(function (result) { return res.send({ result: result, noteSaved: true }); })
+                        .catch(function (err) { return res.send({ err: err, noteSaved: false }); });
                 }
                 _a.label = 3;
             case 3: return [2 /*return*/];
