@@ -49,11 +49,11 @@ exports.userRoute = router
 })
     .post('/notes', function (req, res) {
     var token = req.body.token;
-    console.log("token: " + token);
+    //   console.log(`token: ${token}`);
     var decodedToken = tokenHelper.decodeToken(token);
     if (decodedToken.exp > Date.now() / 1000) {
-        console.log('not expired');
-        console.log(decodedToken);
+        // console.log('not expired');
+        // console.log(decodedToken);
         var email = decodedToken.email;
         User_1.user.findOne({ email: email })
             .then(function (user) {
@@ -65,11 +65,12 @@ exports.userRoute = router
                 var token_1 = tokenHelper.signToken({ name: name_1, email: email_1, notes: notes });
                 res.send({ token: token_1 });
             }
-        });
+        })
+            .catch(function (err) { return console.log(err); });
     }
     else {
-        console.log('expired token');
-        res.send('nothing buddy');
+        //  console.log('expired token');
+        //  res.send('nothing buddy');
     }
 })
     .post('/signUp', function (req, res) {
@@ -91,8 +92,8 @@ exports.userRoute = router
             var token = tokenHelper.signToken({ name: name_2, email: email_2, notes: notes });
             res.send(token);
         }
-        console.log(result);
-        res.send(result);
+        //    console.log(result);
+        //    res.send(result);
     })
         .catch(function (error) { return console.log(error); });
 })
@@ -102,7 +103,6 @@ exports.userRoute = router
         switch (_b.label) {
             case 0:
                 _a = req.body, email = _a.email, password = _a.password;
-                console.log({ email: email, password: password });
                 return [4 /*yield*/, User_1.user.findOne({ email: email }).catch(function (err) { return res.send(err); })];
             case 1:
                 dbUser = _b.sent();
@@ -122,31 +122,71 @@ exports.userRoute = router
     });
 }); })
     .post('/createNote', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-    var token, decodedToken, email, title, note, dbUser;
+    var token, decodedToken, email, note, dbUser;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 token = req.body.token;
                 decodedToken = tokenHelper.decodeToken(token);
-                console.log({ decodedToken: decodedToken });
-                email = decodedToken.email, title = decodedToken.title, note = decodedToken.note;
-                // Assign title to note
-                note.title = title;
+                email = decodedToken.email, note = decodedToken.note;
                 if (!(decodedToken.exp < Date.now() / 1000)) return [3 /*break*/, 1];
                 res.send('Token is expired').status(403);
-                return [3 /*break*/, 3];
-            case 1: return [4 /*yield*/, User_1.user.findOne({ email: email }).catch(function (err) { return res.send(err); })];
-            case 2:
+                return [3 /*break*/, 4];
+            case 1:
+                console.log('this is the note submitted');
+                console.log(note);
+                if (!note._id) return [3 /*break*/, 2];
+                /*EDIT NOTE DO NOT CREATE NEW ONE */
+                User_1.user.findOneAndUpdate({ 'notes._id': note._id }, { $set: {
+                        'notes.$.title': note.title, 'notes.$.note': note.note
+                    } })
+                    .then(function (result) {
+                    console.log(result);
+                    res.send({ result: result, noteSaved: true }).status(200);
+                })
+                    .catch(function (err) {
+                    console.log(err);
+                    res.send({ err: err, noteSaved: false }).status(403);
+                });
+                return [3 /*break*/, 4];
+            case 2: return [4 /*yield*/, User_1.user.findOne({ email: email }).catch(function (err) { return res.send(err); })];
+            case 3:
                 dbUser = _a.sent();
                 if (!dbUser) {
                     res.send('No user with that email exists...').status(403);
                 }
                 else {
-                    // Give note an id for retrieval
-                    // note.id = crypto.randomBytes(64).toString('hex');
-                    User_1.user.findOneAndUpdate({ email: email }, { $push: { notes: note } })
+                    User_1.user.findOneAndUpdate({ email: email }, { $push: { notes: { title: note.title, note: note.note } } })
                         .then(function (result) { return res.send({ result: result, noteSaved: true }); })
                         .catch(function (err) { return res.send({ err: err, noteSaved: false }); });
+                }
+                _a.label = 4;
+            case 4: return [2 /*return*/];
+        }
+    });
+}); })
+    .post('/getNoteByID', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+    var token, decodedToken, email /*noteID*/, dbUser, newToken;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                token = req.body.token;
+                decodedToken = tokenHelper.decodeToken(token);
+                if (!(decodedToken.exp < Date.now() / 1000)) return [3 /*break*/, 1];
+                res.send('Token is expired').status(403);
+                return [3 /*break*/, 3];
+            case 1:
+                email = decodedToken.email;
+                return [4 /*yield*/, User_1.user.findOne({ email: email }).catch(function (err) { return res.send(err); })];
+            case 2:
+                dbUser = _a.sent();
+                if (!dbUser) {
+                    res.send('No user with that email exists...').status(403);
+                    console.log('No user');
+                }
+                else {
+                    newToken = tokenHelper.signToken({ token: dbUser });
+                    res.send({ token: newToken });
                 }
                 _a.label = 3;
             case 3: return [2 /*return*/];

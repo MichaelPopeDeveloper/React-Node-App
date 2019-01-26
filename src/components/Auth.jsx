@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import Admin from './Admin';
 import Notes from './Notes';
+import SignUp from './SignUp';
 import * as axios from 'axios';
 import * as localStorage from '../dir/helper/localStorage';
 import * as tokenHelper from '../dir/helper/JWT';
@@ -28,6 +29,7 @@ function AuthExample() {
         <Route path="/public" component={Public} />
         <Route path="/notes" component={Notes} />
         <Route path="/login" component={Login} />
+        <Route path="/signup" component={SignUp} />
         <PrivateRoute path="/protected" component={Admin} />
       </div>
     </Router>
@@ -173,7 +175,7 @@ class Login extends React.Component {
     const { redirectToReferrer } = this.state;
     const { email, password } = this.state;
 
-    if (redirectToReferrer) return <Redirect to={"/protected"} />;
+    if (redirectToReferrer) return <Redirect to="/protected" />;
 
     return (
       <div className="row vh-100 login-background">

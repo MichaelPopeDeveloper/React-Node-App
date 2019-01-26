@@ -12,11 +12,11 @@ export const userRoute = router
   })
   .post('/notes', (req, res) => {
     const { token } = req.body;
-    console.log(`token: ${token}`);
+ //   console.log(`token: ${token}`);
     const decodedToken = tokenHelper.decodeToken(token);
     if (decodedToken.exp > Date.now() / 1000) {
-      console.log('not expired');
-      console.log(decodedToken);
+     // console.log('not expired');
+     // console.log(decodedToken);
       const { email } = decodedToken;
       user.findOne({ email })
         .then((user) => {
@@ -27,10 +27,11 @@ export const userRoute = router
             const token = tokenHelper.signToken({ name, email, notes });
             res.send({ token });
           }
-        });
+        })
+        .catch(err => console.log(err));
     } else {
-      console.log('expired token');
-      res.send('nothing buddy');
+    //  console.log('expired token');
+    //  res.send('nothing buddy');
     }
   })
   .post('/signUp', (req, res) => {
@@ -51,14 +52,16 @@ export const userRoute = router
           const token = tokenHelper.signToken({ name, email, notes });
           res.send(token);
         }
-        console.log(result);
-        res.send(result);
+    //    console.log(result);
+    //    res.send(result);
       })
       .catch(error => console.log(error));
   })
   .post('/login', async (req, res) => {
+  //  console.log('Body: ');
+  //  console.log(req.body);
     const { email, password } = req.body;
-    console.log({ email, password });
+  //  console.log({ email, password });
     const dbUser: any = await user.findOne({ email }).catch(err => res.send(err));
     if (!dbUser) {
       res.send('No user with that username exists...').status(403);
@@ -74,27 +77,59 @@ export const userRoute = router
   .post('/createNote', async (req, res) => {
     const { token } = req.body;
     const decodedToken: any = tokenHelper.decodeToken(token);
-    console.log({ decodedToken });
-    const { email, title, note } = decodedToken;
+    const { email, note } = decodedToken;
     // Assign title to note
-    note.title = title;
+  //  note.title = title;
     if (decodedToken.exp < Date.now() / 1000) {
       res.send('Token is expired').status(403);
     } else {
+      console.log('this is the note submitted');
+      console.log(note);
+      if (note._id) {
+        /*EDIT NOTE DO NOT CREATE NEW ONE */
+        user.findOneAndUpdate(
+          { 'notes._id': note._id },
+           { $set: { 
+             'notes.$.title': note.title, 'notes.$.note': note.note } })
+        .then(result => {
+          console.log(result);
+         res.send({ result, noteSaved: true }).status(200);
+        })
+        .catch(err => {
+          console.log(err);
+          res.send({ err, noteSaved: false }).status(403);
+        });
+      } else {
+        // Create new note
+        const dbUser: any = await user.findOne({ email }).catch(err => res.send(err));
+        if (!dbUser) {
+          res.send('No user with that email exists...').status(403);
+        } else {
+          user.findOneAndUpdate({ email }, { $push: { notes: {title: note.title, note: note.note} } })
+            .then(result => res.send({ result, noteSaved: true }))
+            .catch(err => res.send({ err, noteSaved: false }));
+        }
+      }
+    }
+  })
+  .post('/getNoteByID', async (req, res) => {
+    const { token } = req.body;
+    const decodedToken: any = tokenHelper.decodeToken(token);
+   // console.log({ decodedToken });
+    // Assign title to note
+    //  res.sendStatus(200);
+    if (decodedToken.exp < Date.now() / 1000) {
+      res.send('Token is expired').status(403);
+    } else {
+    const { email /*noteID*/ } = decodedToken;
       const dbUser: any = await user.findOne({ email }).catch(err => res.send(err));
       if (!dbUser) {
         res.send('No user with that email exists...').status(403);
+    console.log('No user');
       } else {
-        // Give note an id for retrieval
-        // note.id = crypto.randomBytes(64).toString('hex');
-        /**
-         * Retrieve notes from db user and send them to client in token.
-         */
-        user.findOneAndUpdate({ email }, { $push: { notes: note } })
-          .then(result => res.send({ result, noteSaved: true }))
-          .catch(err => res.send({ err, noteSaved: false }));
+        const newToken = tokenHelper.signToken({ token: dbUser });
+         res.send({ token: newToken });
       }
-      // const { notes } = dbUser;
     }
   })
   .post('/checkToken', async (req, res) => {

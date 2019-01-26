@@ -18,6 +18,8 @@ class Admin extends Component {
     this.state = {
       name: '',
       notes: [],
+      clickedNote: {},
+      ShouldRedirectToNote: false,
     };
     // this.login = this.login.bind(this);
     this.getNotes = this.getNotes.bind(this);
@@ -69,33 +71,41 @@ class Admin extends Component {
       .catch(err => console.log(err));
   }
 
-  logNoteValue(event) {
-    console.log(event.target.getAttribute('data-key'));
+  logNoteValue(note) {
+    const { state } = this;
+    const { target } = note;
+    this.setState({ ShouldRedirectToNote: true });
+    this.setState({ clickedNote: target });
+    console.log(`Should redirect: ${state.ShouldRedirectToNote}`);
+    console.log(target);
+    console.log('redirect');
   }
 
   redirectToNotes() {
-    console.log('redirecting!!');
-    return <Redirect
-    to={{
-       pathname: "/notes",
-       state: {
-        egg: 'egg'
-       }
-    }}
-  />;
-
+    const { state } = this;
+    return (
+      <Redirect
+        to={{
+          pathname: '/notes',
+          state: { note: state.clickedNote },
+        }}
+      />
+    );
   }
 
 
   render() {
-    const listNotes = this.state.notes.map((note) => {
-      return <li data-key={note._id} onClick={this.logNoteValue} className="border-top border-bottom p-3">{note.title}</li>;
-    });
     const { state } = this;
+
+    const listNotes = state.notes.map((note) => {
+      return <li title={note.title} data-key={note._id} onClick={this.logNoteValue} className="border-top border-bottom p-3">{note.title}</li>;
+    });
+    if (state.ShouldRedirectToNote) return <Redirect to={{ pathname: '/notes', data: { note: state.clickedNote } }} />;
+
     return (
       <div className="row vh-100">
         <div className="col w-100 d-flex flex-column justify-content-start align-items-center align-content-center">
-          <Link to="/notes"><button className="btn btn-primary m-5" type="text" onClick={this.redirectToNotes}>Add Note</button></Link>
+          <Link to="/notes"><button className="btn btn-primary m-5" onClick={this.redirectToNotes}>Add Note</button></Link>
           <ul className="list-unstyled w-100">{listNotes}</ul>
         </div>
       </div>

@@ -34,10 +34,11 @@ class SignUp extends Component {
   }
 
   login() {
-    axios.post('/user/login', {
+    axios.post('/user/signup', {
       name: 'Michael',
       email: 'michaelpopedeveloper@gmail.com',
       password: 'password123',
+      notes: []
     })
       .then((res) => {
         console.log(res);
